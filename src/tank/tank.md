@@ -1,8 +1,6 @@
 # Tank
 A tank stores a fluid.
-- A tank has a capacity that determines how much fluid it can hold.
-- A tank has an amount of fluid that it is currently storing.
-- A tank can be connected to valves in a device, which determine where the fluid can flow from and to.
+A tank can be connected to valves in a device, which determine where the fluid can flow from and to.
 
 ## Fields
 
