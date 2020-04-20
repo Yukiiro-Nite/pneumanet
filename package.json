@@ -1,0 +1,17 @@
+{
+  "name": "pneumanet",
+  "version": "0.0.1",
+  "description": "A library for simulating a connected set of tanks and valves",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "graphlib": "^2.1.8"
+  },
+  "devDependencies": {
+    "jest": "^25.3.0"
+  }
+}
