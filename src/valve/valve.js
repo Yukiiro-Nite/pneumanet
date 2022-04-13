@@ -55,6 +55,17 @@ class Valve {
 
     return results
   }
+
+  suck(results, time) {
+    this.updateControl()
+    const valveFlowResults = { nodes: {}, inputs: {}, outputs: {} }
+    this.updateIO(valveFlowResults, time)
+
+    this.output.suck(results, time)
+    results.nodes[this.name] = results.nodes[this.output.name]
+
+    return results
+  }
 }
 
 module.exports = Valve

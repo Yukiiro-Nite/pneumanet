@@ -40,6 +40,26 @@ const NOR_DEVICE_CONFIG = {
   }
 }
 
+const BUFFER_DEVICE = 'BUFFER'
+const BUFFER_DEVICE_CONFIG = {
+  name: BUFFER_DEVICE,
+  deviceConfig: {
+    nodes: [
+      { type: 'src', name: 'src_main', options: { outFlow: 1 } },
+      { type: 'src', name: 'src_ctrl', options: { outFlow: 0.1 } },
+      { type: 'tank', name: 'tank', options: { capacity: 10 } },
+      { type: 'valve', name: 'valve', options: { maxFlow: 2, controlMin: 0.1 } },
+      { type: 'snk', name: 'output', options: { inFlow: 2  } }
+    ],
+    connections: [
+      [ { name: 'src_main' }, { name: 'tank', port: { type: 'input' } } ],
+      [ { name: 'tank', port: { type: 'output' } }, { name: 'valve', port: 'input' } ],
+      [ { name: 'valve', port: 'output' }, { name: 'output' } ],
+      [ { name: 'src_ctrl' }, { name: 'valve', port: 'control' } ]
+    ]
+  }
+}
+
 describe('Engine', () => {
   it('Can create an AND gate device and display the correct output', () => {
     const engine = new Engine()
@@ -97,5 +117,22 @@ describe('Engine', () => {
     io = engine.iterateDevice(NOR_DEVICE, 1)
     expect(io.outputs['output'].flow).toBe(1)
     expect(io.inputs['src_main'].flow).toBe(1)
+  })
+
+  it('Can create a buffer device and display the correct output', () => {
+    const engine = new Engine()
+    engine.createDevice(BUFFER_DEVICE_CONFIG)
+    const device = engine.getDevice(BUFFER_DEVICE)
+
+    let io = engine.iterateDevice(BUFFER_DEVICE, 3)
+    expect(device.nodes['tank'].amount).toBe(3)
+    expect(io.outputs['output'].flow).toBe(0)
+    expect(io.inputs['src_main'].flow).toBe(3)
+
+    device.inputs['src_ctrl'].outFlow = 0
+    io = engine.iterateDevice(BUFFER_DEVICE, 1)
+    expect(device.nodes['tank'].amount).toBe(2)
+    expect(io.outputs['output'].flow).toBe(2)
+    expect(io.inputs['src_main'].flow).toBe(2)
   })
 })

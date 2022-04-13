@@ -31,6 +31,23 @@ class Sink extends Connectable {
     return results
   }
 
+  suck(results, time) {
+    let suckResult = { suck: 0 }
+
+    if(results.nodes[this.name]) {
+      return results
+    } else if (this.parent) {
+      this.parent.suck(results, time)
+      suckResult = results.nodes[this.parent.name]
+    } else if (this.input) {
+      suckResult.suck = Math.min(this.inFlow * time, this.input.outFlow * time)
+    }
+
+    results.nodes[this.name] = suckResult
+
+    return results
+  }
+
   connect(other) {
     this.input = other
     other.output = this

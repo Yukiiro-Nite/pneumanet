@@ -5,6 +5,9 @@ const { genId } = require("../utils/numberUtils")
 const id = () => `tank-${genId()}`
 
 class Tank {
+  inputs = {}
+  outputs = {}
+
   constructor({ capacity=0, amount=0, name=id() } = {}) {
     this.capacity = capacity
     this.amount = amount
@@ -69,13 +72,15 @@ class Tank {
 
   addInput(details) {
     const input = new Sink({ parent: this })
-    this.inputs[details.name] = input
+    const id = details.name || input.name
+    this.inputs[id] = input
     return input
   }
 
   addOutput(details) {
     const output = new Source({ parent: this })
-    this.outputs[details.name] = output
+    const id = details.name || output.name
+    this.outputs[id] = output
     return output
   }
 
@@ -104,7 +109,7 @@ class Tank {
     const nearFull = totalPush > available
 
     inputs.forEach(sink => {
-      nearFull
+      sink.inFlow = nearFull
         ? (sink.input.outFlow / totalPush) * available
         : sink.input.outFlow
     })
@@ -119,18 +124,35 @@ class Tank {
     const nearEmpty = totalPull > this.amount
 
     outputs.forEach(source => {
-      nearEmpty
+      source.outFlow = nearEmpty
         ? (source.output.inFlow / totalPull) * this.amount
         : source.output.inFlow
     })
   }
 
   updateIO() {
-    this.updateInputs()
     this.updateOutputs()
+    this.updateInputs()
   }
 
-  flow(results) {
+  flow(results, time) {
+    // backtrace other outputs with src.suck
+    // get the total potential suck
+    // 
+    const suckResults = { nodes: {} }
+    const outputs = Object.values(this.outputs);
+    const outputSucks = outputs.map(output => {
+      output.suck(suckResults, time)
+      return { node: output, suckVal: suckResults.nodes[output.name].suck }
+    })
+    const totalSuck = outputSucks.reduce((sum, output) => sum + output.suckVal, 0)
+    this.updateOutputs()
+    outputs.forEach(output => {
+      results.nodes[output.name] = { flow: suckResults.nodes[output.name].suck }
+    })
+
+    console.log(outputSucks)
+
     return results
   }
 }

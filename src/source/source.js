@@ -26,6 +26,22 @@ class Source extends Connectable {
     return results
   }
 
+  suck(results, time) {
+    let suckResult = { suck: 0 }
+
+    if(results.nodes[this.name]) {
+      return results
+    } else if (this.output) {
+      this.output.suck(results, time)
+      const outSuck = results.nodes[this.output.name].suck
+      suckResult.suck = Math.min(this.outFlow * time, outSuck)
+    }
+
+    results.nodes[this.name] = suckResult
+
+    return results
+  }
+
   connect(other) {
     this.output = other
     other.input = this
