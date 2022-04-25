@@ -1,4 +1,4 @@
-const Connectable = require('./connectable')
+import { Connectable } from './connectable'
 
 describe('Connectable', () => {
   it('does', () => {

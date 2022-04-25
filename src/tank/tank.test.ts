@@ -1,7 +1,7 @@
-const Tank = require('./tank.js')
+import { Tank } from './tank'
 
 describe('Tank', () => {
-  let tank
+  let tank: Tank
   beforeEach(() => {
     tank = new Tank({ capacity: 10, amount: 5 })
   })

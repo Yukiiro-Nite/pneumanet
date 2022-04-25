@@ -1,4 +1,4 @@
-const Device = require('./device')
+import { Device } from './device'
 
 describe('Device', () => {
   it('does', () => {

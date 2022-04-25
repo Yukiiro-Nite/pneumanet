@@ -1,4 +1,4 @@
-const Valve = require('./valve.js')
+import { Valve } from './valve'
 
 describe('Valve', () => {
   it('does', () => {

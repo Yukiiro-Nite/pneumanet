@@ -1,4 +1,4 @@
-function clamp(value, [min, max]) {
+export function clamp(value: number, [min, max]: [number, number]): number {
   if(min > max) {
     return clamp(value, [max, min])
   }
@@ -6,7 +6,7 @@ function clamp(value, [min, max]) {
   return Math.min(max, Math.max(min, value))
 }
 
-function transform(value, fromMin, fromMax, toMin, toMax, clampOutput = false) {
+export function transform(value: number, fromMin: number, fromMax: number, toMin: number, toMax: number, clampOutput = false): number {
   const fromRange = fromMax - fromMin;
   const toRange = toMax - toMin;
   const scale = toRange / fromRange;
@@ -17,8 +17,8 @@ function transform(value, fromMin, fromMax, toMin, toMax, clampOutput = false) {
     : transformedValue;
 }
 
-let lastId
-function genId() {
+let lastId: number
+export function genId(): string {
   let next = Date.now()
   if (next <= lastId) {
     lastId++
@@ -27,10 +27,4 @@ function genId() {
   }
 
   return lastId.toString(36)
-}
-
-module.exports =  {
-  clamp,
-  transform,
-  genId
 }

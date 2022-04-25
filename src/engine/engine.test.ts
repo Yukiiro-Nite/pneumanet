@@ -1,4 +1,6 @@
-const Engine = require('./engine')
+import { DeviceOptions } from '../device/device'
+import { Tank } from '../tank/tank'
+import { Engine } from './engine'
 
 const AND_DEVICE = 'AND'
 const AND_DEVICE_CONFIG = {
@@ -15,7 +17,7 @@ const AND_DEVICE_CONFIG = {
       [ { name: 'src_ctrl'}, { name: 'valve', port: 'control' } ],
       [ { name: 'valve', port: 'output' }, { name: 'output' } ],
     ]
-  }
+  } as DeviceOptions
 }
 
 const NOR_DEVICE = 'NOR'
@@ -37,7 +39,7 @@ const NOR_DEVICE_CONFIG = {
       [ { name: 'valve_1', port: 'output' }, { name: 'valve_2', port: 'input' } ],
       [ { name: 'valve_2', port: 'output' }, { name: 'output' } ]
     ]
-  }
+  } as DeviceOptions
 }
 
 const BUFFER_DEVICE = 'BUFFER'
@@ -52,12 +54,48 @@ const BUFFER_DEVICE_CONFIG = {
       { type: 'snk', name: 'output', options: { inFlow: 2  } }
     ],
     connections: [
-      [ { name: 'src_main' }, { name: 'tank', port: { type: 'input' } } ],
-      [ { name: 'tank', port: { type: 'output' } }, { name: 'valve', port: 'input' } ],
+      [ { name: 'src_main' }, { name: 'tank', type: 'input' } ],
+      [ { name: 'tank', type: 'output' }, { name: 'valve', port: 'input' } ],
       [ { name: 'valve', port: 'output' }, { name: 'output' } ],
       [ { name: 'src_ctrl' }, { name: 'valve', port: 'control' } ]
     ]
-  }
+  } as DeviceOptions
+}
+
+const SIMPLE_TANK_DEVICE = 'SIMPLE_TANK'
+const SIMPLE_TANK_DEVICE_CONFIG = {
+  name: SIMPLE_TANK_DEVICE,
+  deviceConfig: {
+    nodes: [
+      { type: 'src', name: 'input', options: { outFlow: 2 } },
+      { type: 'snk', name: 'output', options: { inFlow: 1 } },
+      { type: 'tank', name: 'tank', options: { capacity: 10 } }
+    ],
+    connections: [
+      [ { name: 'input' }, { name: 'tank', type: 'input' } ],
+      [ { name: 'tank', type: 'output' }, { name: 'output' } ],
+    ]
+  } as DeviceOptions
+}
+
+const COMPLEX_TANK_DEVICE = 'COMPLEX_TANK'
+const COMPLEX_TANK_DEVICE_CONFIG = {
+  name: COMPLEX_TANK_DEVICE,
+  deviceConfig: {
+    nodes: [
+      { type: 'src', name: 'input_1', options: { outFlow: 1 } },
+      { type: 'src', name: 'input_2', options: { outFlow: 1 } },
+      { type: 'snk', name: 'output_1', options: { inFlow: 1 } },
+      { type: 'snk', name: 'output_2', options: { inFlow: 1 } },
+      { type: 'tank', name: 'tank', options: { capacity: 10 } }
+    ],
+    connections: [
+      [ { name: 'input_1' }, { name: 'tank', type: 'input' } ],
+      [ { name: 'input_2' }, { name: 'tank', type: 'input' } ],
+      [ { name: 'tank', type: 'output' }, { name: 'output_1' } ],
+      [ { name: 'tank', type: 'output' }, { name: 'output_2' } ],
+    ]
+  } as DeviceOptions
 }
 
 describe('Engine', () => {
@@ -125,14 +163,46 @@ describe('Engine', () => {
     const device = engine.getDevice(BUFFER_DEVICE)
 
     let io = engine.iterateDevice(BUFFER_DEVICE, 3)
-    expect(device.nodes['tank'].amount).toBe(3)
+    expect((device.nodes['tank'] as Tank).amount).toBe(3)
     expect(io.outputs['output'].flow).toBe(0)
     expect(io.inputs['src_main'].flow).toBe(3)
 
     device.inputs['src_ctrl'].outFlow = 0
     io = engine.iterateDevice(BUFFER_DEVICE, 1)
-    expect(device.nodes['tank'].amount).toBe(2)
+    expect((device.nodes['tank'] as Tank).amount).toBe(2)
     expect(io.outputs['output'].flow).toBe(2)
-    expect(io.inputs['src_main'].flow).toBe(2)
+    expect(io.inputs['src_main'].flow).toBe(1)
+  })
+
+  it('Can create a simple tank with 1 input and output', () => {
+    const engine = new Engine()
+    engine.createDevice(SIMPLE_TANK_DEVICE_CONFIG)
+    const device = engine.getDevice(SIMPLE_TANK_DEVICE)
+
+    let io = engine.iterateDevice(SIMPLE_TANK_DEVICE, 1)
+    expect(io.outputs['output'].flow).toBe(1)
+    expect(io.inputs['input'].flow).toBe(2)
+    expect((device.nodes['tank'] as Tank).amount).toBe(1)
+
+    device.inputs['input'].outFlow = 0
+    io = engine.iterateDevice(SIMPLE_TANK_DEVICE, 1)
+    expect(io.outputs['output'].flow).toBe(1)
+    expect(io.inputs['input'].flow).toBe(0)
+    expect((device.nodes['tank'] as Tank).amount).toBe(0)
+  })
+
+  describe('Complex Tank', () => {
+    it('Can create a complex tank with multiple inputs and outputs', () => {
+      const engine = new Engine()
+      engine.createDevice(COMPLEX_TANK_DEVICE_CONFIG)
+      const device = engine.getDevice(COMPLEX_TANK_DEVICE)
+
+      let io = engine.iterateDevice(COMPLEX_TANK_DEVICE, 10)
+      expect(io.outputs['output_1'].flow).toBe(10)
+      expect(io.outputs['output_2'].flow).toBe(10)
+      expect(io.inputs['input_1'].flow).toBe(10)
+      expect(io.inputs['input_2'].flow).toBe(10)
+      expect((device.nodes['tank'] as Tank).amount).toBe(0)
+    })
   })
 })
